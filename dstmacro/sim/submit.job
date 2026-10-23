@@ -1,0 +1,19 @@
+Universe = vanilla
+Notification = Never
+
+Initialdir = /sphenix/u/tomoki/work_tomoki/SiCalo/dstmacro/sim
+Executable = $(Initialdir)/run.sh
+Arguments = $(Process)
+
+Log = /tmp/tomoki_sicalo_v5_$(Cluster)_$(Process).log
+Output = $(Initialdir)/out/v5_job_$(Process).out
+Error = $(Initialdir)/err/v5_job_$(Process).err
+
+request_memory = 12GB
+request_cpus = 1
+Requirements = (CPU_Speed >= 1)
+Rank = CPU_Speed
+job_lease_duration = 86400
+on_exit_hold = (ExitBySignal == True) || (ExitCode != 0)
+
+Queue 10000

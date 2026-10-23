@@ -1,0 +1,12 @@
+Executable = /sphenix/u/tomoki/work_tomoki/SiCalo/macros/run_singlev2.sh
+Arguments  = $(Process)
+InitialDir = /sphenix/u/tomoki/work_tomoki/SiCalo/macros
+
+Log        = /tmp/eminus_$(Process).log
+Output     = out/eminus_$(Process).out
+Error      = err/eminus_$(Process).err
+
+request_memory = 12GB
+request_cpus = 1
+
+Queue 10000

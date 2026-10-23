@@ -1,0 +1,26 @@
+# Simulation and analysis products
+output/
+output_afteranalysis/
+input/
+*.root
+
+# Build products
+build/
+install/
+*.o
+*.lo
+*.la
+*.so
+*.pcm
+*.d
+
+# Batch and log output
+*.log
+*.out
+*.err
+
+# Editor and temporary files
+*~
+*.swp
+.DS_Store
+
