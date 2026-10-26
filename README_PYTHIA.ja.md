@@ -18,7 +18,7 @@
 | 同等 source | [`Fun4All_PYTHIA_SiliconRecoPositionv4.C`](dstmacro/sim/Fun4All_PYTHIA_SiliconRecoPositionv4.C#L1) | v5 と実質同じ。関数名と include guard のみ異なる |
 | ML v4 production | [`Fun4All_PYTHIA_SiliconRecov2.C`](dstmacro/sim/Fun4All_PYTHIA_SiliconRecov2.C#L1) | `ana_pythia_sicalo_v2` に ElectronClassifier 用 `_v4.root` を作る |
 | first-touch study | [`Fun4All_PYTHIA_SiliconRecov3.C`](dstmacro/sim/Fun4All_PYTHIA_SiliconRecov3.C#L1) | EMCal first-touch tower と 93.5 cm projection を使う旧比較版 |
-| 初期版 | [`Fun4All_PYTHIA_SiliconReco.C`](dstmacro/sim/Fun4All_PYTHIA_SiliconReco.C#L1) | analyzer ROOT まで。flat tree の自動作成なし |
+| 初期版 | [`Fun4All_PYTHIA_SiliconReco.C`](dstmacro/sim/Fun4All_PYTHIA_SiliconReco.C#L1) | nanoDST まで。flat tree の自動作成なし |
 
 `run_pythia.csh`、`run_condor.job`、`run_job.csh` は古いユーザー領域を参照する legacy 経路です。新しい production には `run.sh` と `submit.job` を使用します。
 
@@ -89,7 +89,7 @@ TRACKS と GLOBAL の filename も組み立てますが、その input manager �
 7. `PHActsTrackProjection` で track state を EMCal 半径 104 cm に外挿（L325--328）。
 8. truth/reco association table を作る（[`Positionv5.C` L333](dstmacro/sim/Fun4All_PYTHIA_SiliconRecoPositionv5.C#L333)）。
 9. `SiliconCaloMatching` を登録（L371--379）。
-10. `SiliconSeedsAna` を登録して analyzer ROOT を作る（L382--392）。
+10. `SiliconSeedsAna` を登録して nanoDST を作る（L382--392）。
 11. `se->run()`、`End()` 後に flat-tree converter と feature adder を順に実行（[`Positionv5.C` L397--435](dstmacro/sim/Fun4All_PYTHIA_SiliconRecoPositionv5.C#L397)）。
 
 calorimeter waveform node は現在の DST schema と合わず、この解析でも不要なため無効化しています（[`Positionv5.C` L242--249](dstmacro/sim/Fun4All_PYTHIA_SiliconRecoPositionv5.C#L242)）。
@@ -157,7 +157,7 @@ pT = 0.21 * signed_bending_angle^(-0.986)
 
 結果は `SiliconCaloTrackMap` に track ID、calo ID、再評価 pT、phi、eta、`delta_phi`、`delta_z` として保存されます（L257--268）。
 
-## `SiliconSeedsAna` が analyzer ROOT に保存するもの
+## `SiliconSeedsAna` が nanoDST に保存するもの
 
 実装は [`SiliconSeedAna/SiliconSeedsAna.cc`](SiliconSeedAna/SiliconSeedsAna.cc#L1) です。event ごとに truth、vertex、EMCal cluster、track、silicon cluster、all-calorimeter topo cluster の順で処理します（[`SiliconSeedsAna.cc` L392--440](SiliconSeedAna/SiliconSeedsAna.cc#L392)）。
 
@@ -230,7 +230,7 @@ vertex_r = sqrt(vertex_x^2 + vertex_y^2) <= 5 cm
 
 両方を通った場合だけ、`get_track_id()`を`track_id_truth`、`get_pid()`を`track_truth_pid`に保存します（[`SiliconSeedsAna.cc` L807--841](SiliconSeedAna/SiliconSeedsAna.cc#L807)）。つまり単なる最近接position matchingではなく、tracker cluster truth associationに基づく相互確認付きmatchingです。
 
-対応が見つからない場合、analyzer ROOTでは`track_id_truth = std::numeric_limits<int>::max()`、`track_truth_pid = 0`です。flat converterは`track_truth_pid`をそのまま採用せず、`track_id_truth`を使って`truthTree`を引き直します。
+対応が見つからない場合、nanoDSTでは`track_id_truth = std::numeric_limits<int>::max()`、`track_truth_pid = 0`です。flat converterは`track_truth_pid`をそのまま採用せず、`track_id_truth`を使って`truthTree`を引き直します。
 
 ### 4. Truth CEMC entrance position
 
@@ -269,7 +269,7 @@ emcal_truth_ds_at_truth_r     = truth_cemc_r * emcal_truth_dphi
 emcal_truth_ds_at_cluster_r   = 104 cm * emcal_truth_dphi
 ```
 
-v4 converterは`truth_cemc_*` branchが一つでも不足すると変換を中止し、更新済み`SiliconSeedsAna`でanalyzer ROOTを再生成するようerrorを出します（[`make...v4.C` L319--359](macros/make_SiEmcalTopoTree_v4.C#L319)）。
+v4 converterは`truth_cemc_*` branchが一つでも不足すると変換を中止し、更新済み`SiliconSeedsAna`でnanoDSTを再生成するようerrorを出します（[`make...v4.C` L319--359](macros/make_SiEmcalTopoTree_v4.C#L319)）。
 
 ### EMCal cluster
 
@@ -283,7 +283,7 @@ v4 converterは`truth_cemc_*` branchが一つでも不足すると変換を中�
 
 ### `make_SiEmcalTopoTree_v3.C`
 
-[`make_SiEmcalTopoTree_v3.C`](macros/make_SiEmcalTopoTree_v3.C#L207) は analyzer ROOT の複数 TTree を、ML で読みやすい **1 entry = 1 track--EMCal--topo match** の tree にまとめます。
+[`make_SiEmcalTopoTree_v3.C`](macros/make_SiEmcalTopoTree_v3.C#L207) は nanoDST の複数 TTree を、ML で読みやすい **1 entry = 1 track--EMCal--topo match** の tree にまとめます。
 
 処理は次の通りです。
 
@@ -318,7 +318,7 @@ calo cluster と topo cluster の対応は、CEMC tower の `x/y/z/energy` が�
 
 ## ML feature の追加
 
-[`add_SiEmcalTopoTreeFeatures_v4.C`](macros/add_SiEmcalTopoTreeFeatures_v4.C#L1) は flat ROOT を `UPDATE` mode で開き（[L115--120](macros/add_SiEmcalTopoTreeFeatures_v4.C#L115)）、analyzer ROOT の情報から ML 用 branch を同じ tree に追加します。
+[`add_SiEmcalTopoTreeFeatures_v4.C`](macros/add_SiEmcalTopoTreeFeatures_v4.C#L1) は flat ROOT を `UPDATE` mode で開き（[L115--120](macros/add_SiEmcalTopoTreeFeatures_v4.C#L115)）、nanoDST の情報から ML 用 branch を同じ tree に追加します。
 
 追加する主な変数は以下です（[L137--168](macros/add_SiEmcalTopoTreeFeatures_v4.C#L137)）。
 
@@ -360,6 +360,6 @@ production の再現性を保つには、ROOT filename の `_v4` / `_v5` だけ�
 - closest EMCal cluster 選択には residual の hard cut がありません。必要なら学習前または解析時に `sicalo_dr`, `sicalo_dphi`, `sicalo_dz` で quality cut を行います。
 - first-touch と centroid では pT の定義が異なるため、同じ branch 名でも production を混ぜない方が安全です。
 - Pythia Position v5 の `DST_SiliconOnly...root` は名前だけ定義され、現在は出力されません。
-- flat converter は analyzer ROOT が正常に完成した後に走ります。途中で Fun4All が失敗すれば `SiEmcalTopoTree` は作られません。
+- flat converter は nanoDST が正常に完成した後に走ります。途中で Fun4All が失敗すれば `SiEmcalTopoTree` は作られません。
 - `run.sh` は最終 flat ROOT の存在で process 全体を skip するため、analyzer だけを作り直したい場合や schema を変更した場合は output 管理に注意が必要です。
-- `macros/run_ai.sh` は既存 Pythia analyzer ROOT に `make...v3` と feature adder を後から適用する backfill 用で、simulation を走らせる script ではありません。
+- `macros/run_ai.sh` は既存 Pythia nanoDST に `make...v3` と feature adder を後から適用する backfill 用で、simulation を走らせる script ではありません。
